@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>家庭電池</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf7f2;
+  --bg-2: #f0ebe3;
+  --ink: #1a1a1a;
+  --ink-soft: #6b6b6b;
+  --paper: #ffffff;
+  --accent: #ff6b6b;
+
+  --mom-color: #ff7eb3;
+  --dad-color: #5ab4ff;
+  --kid-color: #ffd23f;
+
+  --low-color: #ff9f68;
+  --crit-color: #ef4444;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: 'Noto Sans TC', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--bg-2);
+  flex-shrink: 0;
+}
+
+.brand {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1.3rem;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--bg-2);
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.mic-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.mic-dot.active {
+  background: #6bcf7f;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 20px 0;
+  flex-shrink: 0;
+}
+
+.tab {
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-radius: 12px 12px 0 0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 -2px 0 var(--accent) inset;
+}
+
+.stage {
+  flex: 1;
+  background: var(--paper);
+  margin: 0 20px;
+  border-radius: 0 20px 20px 20px;
+  padding: 16px 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.characters-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 0;
+}
+
+.characters-wrap.mode-solo { gap: 0; }
+
+/* Solo mode: make the human as big as possible — same size regardless of which character */
+.characters-wrap.mode-solo .character-slot {
+  max-width: 100%;
+  width: 100%;
+  gap: 10px;
+  justify-content: center;
+}
+
+.characters-wrap.mode-solo .human-wrap {
+  min-height: 0;
+  overflow: visible;
+  width: 100%;
+}
+
+/* Override kid scaling in solo mode — all characters same size */
+.characters-wrap.mode-solo .human-svg,
+.characters-wrap.mode-solo .character-slot[data-id="kid"] .human-svg {
+  height: 100%;
+  max-height: 100%;
+  width: auto;
+}
+
+.characters-wrap.mode-solo .battery-value {
+  font-size: 2.2rem;
+  min-width: 80px;
+}
+
+.characters-wrap.mode-solo .adjust-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 1.4rem;
+  border-radius: 12px;
+}
+
+.characters-wrap.mode-solo .battery-row {
+  gap: 14px;
+}
+
+.characters-wrap.mode-solo .character-label {
+  display: none;
+}
+
+.character-slot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 0;
+  max-width: 360px;
+}
+
+.character-label {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+}
+
+.human-wrap {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  cursor: pointer;
+}
+
+.human-svg {
+  height: 100%;
+  max-height: 100%;
+  width: auto;
+  max-width: 100%;
+  display: block;
+}
+
+/* Kid is smaller than parents in family mode only */
+.characters-wrap:not(.mode-solo) .character-slot[data-id="kid"] .human-svg {
+  height: 72%;
+  width: auto;
+}
+
+.heart-above {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -10%);
+  font-size: 1.7rem;
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.heart-above.show {
+  opacity: 1;
+  animation: heartBob 2s ease-in-out infinite;
+}
+
+@keyframes heartBob {
+  0%, 100% { transform: translate(-50%, -10%) scale(1); }
+  50% { transform: translate(-50%, -22%) scale(1.12); }
+}
+
+.battery-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px;
+}
+
+.battery-value {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  line-height: 1;
+  min-width: 60px;
+  text-align: center;
+}
+
+.battery-value .unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-left: 1px;
+}
+
+.adjust-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
+  background: var(--bg-2);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, background 0.15s;
+}
+
+.adjust-btn:active {
+  transform: scale(0.88);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.solo-hint {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.7;
+}
+
+.bottombar {
+  padding: 10px 20px 14px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.db-display {
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.db-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+}
+
+.db-value {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.db-value .unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-left: 2px;
+}
+
+.db-bar {
+  height: 4px;
+  background: var(--bg-2);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.db-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #6bcf7f, #ffd166, #ff9f68, #ef4444);
+  transition: width 0.15s;
+}
+
+.mic-btn {
+  padding: 12px 14px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 14px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.mic-btn.active { background: var(--accent); }
+.mic-btn:active { transform: scale(0.97); }
+
+.settings-btn {
+  width: 52px;
+  min-height: 52px;
+  border-radius: 14px;
+  background: var(--paper);
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.settings-btn:hover { transform: rotate(45deg); }
+
+.settings-panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 26, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.settings-panel.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.settings-sheet {
+  background: var(--bg);
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  border-radius: 24px 24px 0 0;
+  padding: 10px 24px 28px;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-panel.show .settings-sheet {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--ink-soft);
+  border-radius: 2px;
+  margin: 6px auto 16px;
+  opacity: 0.3;
+}
+
+.sheet-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1.4rem;
+}
+
+.sheet-sub {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-bottom: 20px;
+}
+
+.settings-group {
+  background: var(--paper);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.group-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--bg-2);
+  gap: 12px;
+}
+
+.setting-row:first-of-type { border-top: none; }
+
+.setting-label {
+  font-size: 0.88rem;
+  flex: 1;
+}
+
+.setting-hint {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.num-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-2);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.num-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: none;
+  background: var(--paper);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.num-btn:active { transform: scale(0.9); }
+
+.num-value {
+  min-width: 40px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.toggle-row {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-2);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.toggle-opt {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.toggle-opt.active {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.close-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 14px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.reset-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--bg-2);
+  border-radius: 14px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.touch-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+  opacity: 0.4;
+  animation: ripple 0.6s ease-out forwards;
+  width: 0;
+  height: 0;
+}
+
+@keyframes ripple {
+  0% { width: 0; height: 0; opacity: 0.5; margin-left: 0; margin-top: 0; }
+  100% { width: 80px; height: 80px; opacity: 0; margin-left: -40px; margin-top: -40px; }
+}
+
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 18px;
+  border-radius: 18px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 50;
+  transition: transform 0.3s;
+  pointer-events: none;
+  max-width: 90vw;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.perm-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 26, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 24px;
+}
+
+.perm-modal.show { display: flex; }
+
+.perm-card {
+  background: var(--bg);
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 380px;
+}
+
+.perm-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+}
+
+.perm-card p {
+  line-height: 1.6;
+  font-size: 0.88rem;
+  margin-bottom: 10px;
+}
+
+.perm-note {
+  background: var(--paper);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  color: var(--ink-soft);
+}
+
+.perm-buttons { display: flex; gap: 8px; }
+
+.perm-buttons button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-allow { background: var(--ink); color: var(--paper); }
+.btn-deny { background: var(--bg-2); color: var(--ink); }
+
+/* Solo person picker */
+.solo-picker {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.solo-pick-btn {
+  padding: 6px 14px;
+  border: 2px solid var(--bg-2);
+  background: var(--paper);
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.solo-pick-btn.active {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+@media (max-width: 600px) {
+  .bottombar { grid-template-columns: 1fr auto; grid-template-rows: auto auto; padding: 10px 12px 12px; }
+  .db-display { grid-column: 1 / -1; }
+  .characters-wrap { gap: 4px; }
+  .brand { font-size: 1.1rem; }
+  .stage { margin: 0 10px; padding: 12px 6px; }
+  .tabs { padding: 10px 12px 0; }
+  .character-label { font-size: 0.75rem; }
+  .battery-value { font-size: 1.2rem; min-width: 50px; }
+  .adjust-btn { width: 28px; height: 28px; font-size: 1rem; border-radius: 8px; }
+  .battery-row { gap: 4px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">家庭電池</div>
+  <div class="status-chip">
+    <span class="mic-dot" id="micDot"></span>
+    <span id="micStatus">待機</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-mode="family">全家模式</button>
+  <button class="tab" data-mode="solo">單人模式</button>
+</div>
+
+<div class="stage">
+  <div class="characters-wrap" id="charactersWrap"></div>
+</div>
+
+<div class="bottombar">
+  <div class="db-display">
+    <div class="db-label">環境音量</div>
+    <div class="db-value"><span id="dbValue">--</span><span class="unit">dB</span></div>
+    <div class="db-bar"><div class="db-bar-fill" id="dbBarFill"></div></div>
+  </div>
+  <button class="mic-btn" id="micBtn">
+    <span id="micBtnLabel">🎤 開啟麥克風</span>
+  </button>
+  <button class="settings-btn" id="settingsBtn">⚙️</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="perm-modal" id="permModal">
+  <div class="perm-card">
+    <div class="perm-title">🎤 需要麥克風權限</div>
+    <p>App 會偵測環境音量，聲音大小會決定電量上升或下降。</p>
+    <div class="perm-note">
+      只會即時測量分貝大小，<strong>不錄音、不儲存、不上傳</strong>任何聲音。
+    </div>
+    <div class="perm-buttons">
+      <button class="btn-deny" id="btnDeny">先不要</button>
+      <button class="btn-allow" id="btnAllow">好，開始</button>
+    </div>
+  </div>
+</div>
+
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">設定</div>
+    <div class="sheet-sub">調整音量偵測與電量變化規則</div>
+
+    <div class="settings-group">
+      <div class="group-title"><span class="group-icon">👥</span>顯示模式</div>
+      <div class="setting-row">
+        <div class="setting-label">
+          人物模式
+          <div class="setting-hint">全家 = 爸爸＋媽媽＋小孩；單人 = 只顯示一個角色</div>
+        </div>
+        <div class="toggle-row" id="modeToggle">
+          <button class="toggle-opt active" data-mode="family">全家</button>
+          <button class="toggle-opt" data-mode="solo">單人</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="group-title"><span class="group-icon">📉</span>電量下降規則</div>
+      <div class="setting-row">
+        <div class="setting-label">
+          聲音大於
+          <div class="setting-hint">超過這個分貝才算吵鬧（30–95 dB）</div>
+        </div>
+        <div class="num-input-wrap">
+          <button class="num-btn" data-key="loudDb" data-delta="-5">−</button>
+          <span class="num-value" id="val-loudDb">70</span>
+          <button class="num-btn" data-key="loudDb" data-delta="5">＋</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          持續秒數
+          <div class="setting-hint">連續吵鬧這麼久才觸發一次</div>
+        </div>
+        <div class="num-input-wrap">
+          <button class="num-btn" data-key="loudSec" data-delta="-1">−</button>
+          <span class="num-value" id="val-loudSec">3</span>
+          <button class="num-btn" data-key="loudSec" data-delta="1">＋</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          每次下降
+          <div class="setting-hint">觸發一次會扣多少電量</div>
+        </div>
+        <div class="num-input-wrap">
+          <button class="num-btn" data-key="decayPct" data-delta="-1">−</button>
+          <span class="num-value" id="val-decayPct">5</span>
+          <button class="num-btn" data-key="decayPct" data-delta="1">＋</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="group-title"><span class="group-icon">📈</span>電量回充規則</div>
+      <div class="setting-row">
+        <div class="setting-label">
+          聲音小於
+          <div class="setting-hint">低於這個分貝才算安靜</div>
+        </div>
+        <div class="num-input-wrap">
+          <button class="num-btn" data-key="quietDb" data-delta="-5">−</button>
+          <span class="num-value" id="val-quietDb">55</span>
+          <button class="num-btn" data-key="quietDb" data-delta="5">＋</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          持續秒數
+          <div class="setting-hint">連續安靜這麼久才回充一次</div>
+        </div>
+        <div class="num-input-wrap">
+          <button class="num-btn" data-key="quietSec" data-delta="-5">−</button>
+          <span class="num-value" id="val-quietSec">15</span>
+          <button class="num-btn" data-key="quietSec" data-delta="5">＋</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">
+          每次回充
+          <div class="setting-hint">觸發一次會補多少電量</div>
+        </div>
+        <div class="num-input-wrap">
+          <button class="num-btn" data-key="recoverPct" data-delta="-1">−</button>
+          <span class="num-value" id="val-recoverPct">3</span>
+          <button class="num-btn" data-key="recoverPct" data-delta="1">＋</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="resetBatteryBtn">重置電量為 100%</button>
+    <button class="close-btn" id="closeSettingsBtn">完成</button>
+  </div>
+</div>
+
+<script>
+const DEFAULT_CFG = {
+  loudDb: 70, loudSec: 3, decayPct: 5,
+  quietDb: 55, quietSec: 15, recoverPct: 3,
+};
+const CFG = { ...DEFAULT_CFG };
+const LIMITS = {
+  loudDb: [30, 95], loudSec: [1, 30], decayPct: [1, 30],
+  quietDb: [30, 90], quietSec: [3, 60], recoverPct: [1, 20],
+};
+
+const CHARACTERS = {
+  dad: { label: '爸爸', color: '#5ab4ff', value: 100 },
+  mom: { label: '媽媽', color: '#ff7eb3', value: 100 },
+  kid: { label: '小孩', color: '#ffd23f', value: 100 },
+};
+
+let currentMode = 'family';
+let soloCharacterId = 'kid';
+let micActive = false;
+let micStream = null;
+let audioCtx = null;
+let analyser = null;
+let currentDb = 30;
+let loudStart = null;
+let quietStart = null;
+let lastDecayTime = 0;
+let lastRecoverTime = 0;
+let rafId = null;
+
+// Unified line-art human path — head is larger than reference icon for better face visibility
+// Head: cx=100, cy=56, radius~40 (vs original radius~28)
+const HUMAN_PATH = "M 100 14 C 78 14 60 32 60 54 C 60 70 69 84 82 92 C 62 96 48 110 46 128 L 42 160 C 41 168 48 174 56 174 L 66 174 L 66 192 C 66 197 70 201 75 201 L 86 201 L 86 322 C 86 328 90 332 96 332 L 102 332 C 108 332 112 328 112 322 L 112 250 L 116 250 L 116 322 C 116 328 120 332 126 332 L 132 332 C 138 332 142 328 142 322 L 142 201 L 153 201 C 158 201 162 197 162 192 L 162 174 L 172 174 C 180 174 187 168 186 160 L 182 128 C 180 110 166 96 146 92 C 159 84 168 70 168 54 C 168 32 150 14 128 14 Z";
+
+function buildHumanSlot(id, label) {
+  const clipId = `clip-${id}`;
+  return `
+    <div class="character-slot" data-id="${id}">
+      <div class="character-label">${label}</div>
+      <div class="human-wrap" data-char="${id}">
+        <div class="heart-above">💖</div>
+        <svg class="human-svg" viewBox="0 0 200 340" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <clipPath id="${clipId}">
+              <path d="${HUMAN_PATH}"/>
+            </clipPath>
+          </defs>
+          <rect class="fill-rect" x="0" y="340" width="200" height="340" fill="${CHARACTERS[id].color}" clip-path="url(#${clipId})"/>
+          <path class="outline" d="${HUMAN_PATH}" fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+          <g class="face">
+            <circle class="eye-left" cx="86" cy="54" r="3.5" fill="#1a1a1a"/>
+            <circle class="eye-right" cx="114" cy="54" r="3.5" fill="#1a1a1a"/>
+            <path class="mouth" d="M 88 72 Q 100 80 112 72" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+      <div class="battery-row">
+        <button class="adjust-btn" data-char="${id}" data-delta="-5">−</button>
+        <div class="battery-value"><span class="bval">100</span><span class="unit">%</span></div>
+        <button class="adjust-btn" data-char="${id}" data-delta="5">＋</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderMode() {
+  const wrap = document.getElementById('charactersWrap');
+  wrap.classList.toggle('mode-solo', currentMode === 'solo');
+
+  if (currentMode === 'family') {
+    wrap.innerHTML =
+      buildHumanSlot('dad', '爸爸') +
+      buildHumanSlot('kid', '小孩') +
+      buildHumanSlot('mom', '媽媽');
+  } else {
+    const picker = `
+      <div class="character-slot" data-id="${soloCharacterId}">
+        <div class="solo-picker">
+          ${Object.keys(CHARACTERS).map(id =>
+            `<button class="solo-pick-btn ${id === soloCharacterId ? 'active' : ''}" data-solo="${id}">${CHARACTERS[id].label}</button>`
+          ).join('')}
+        </div>
+        <div class="human-wrap" data-char="${soloCharacterId}">
+          <div class="heart-above">💖</div>
+          <svg class="human-svg" viewBox="0 0 200 340" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <clipPath id="clip-solo">
+                <path d="${HUMAN_PATH}"/>
+              </clipPath>
+            </defs>
+            <rect class="fill-rect" x="0" y="340" width="200" height="340" fill="${CHARACTERS[soloCharacterId].color}" clip-path="url(#clip-solo)"/>
+            <path class="outline" d="${HUMAN_PATH}" fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+            <g class="face">
+              <circle class="eye-left" cx="86" cy="54" r="3.5" fill="#1a1a1a"/>
+              <circle class="eye-right" cx="114" cy="54" r="3.5" fill="#1a1a1a"/>
+              <path class="mouth" d="M 88 72 Q 100 80 112 72" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </div>
+        <div class="battery-row">
+          <button class="adjust-btn" data-char="${soloCharacterId}" data-delta="-5">−</button>
+          <div class="battery-value"><span class="bval">100</span><span class="unit">%</span></div>
+          <button class="adjust-btn" data-char="${soloCharacterId}" data-delta="5">＋</button>
+        </div>
+        <div class="solo-hint">點擊身體調整電量，或按上面 +/−</div>
+      </div>
+    `;
+    wrap.innerHTML = picker;
+
+    // Solo picker buttons
+    wrap.querySelectorAll('[data-solo]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        soloCharacterId = btn.dataset.solo;
+        renderMode();
+      });
+    });
+  }
+
+  // Tap body to set level
+  wrap.querySelectorAll('.human-wrap').forEach(el => {
+    el.addEventListener('click', handleHumanTap);
+  });
+
+  // +/- buttons
+  wrap.querySelectorAll('.adjust-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.char;
+      const delta = parseInt(btn.dataset.delta);
+      CHARACTERS[id].value = Math.max(0, Math.min(100, CHARACTERS[id].value + delta));
+      updateCharacter(id);
+    });
+  });
+
+  updateAllCharacters();
+}
+
+function showToast(text, duration = 1800) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function fadeColor(baseHex, pct) {
+  // When low, shift toward orange/red
+  if (pct >= 60) return baseHex;
+  if (pct >= 40) return mixHex(baseHex, '#ffd166', 0.4);
+  if (pct >= 20) return '#ff9f68';
+  return '#ef4444';
+}
+
+function mixHex(h1, h2, t) {
+  const p1 = parseInt(h1.slice(1), 16);
+  const p2 = parseInt(h2.slice(1), 16);
+  const r = Math.round(((p1 >> 16) & 255) * (1 - t) + ((p2 >> 16) & 255) * t);
+  const g = Math.round(((p1 >> 8) & 255) * (1 - t) + ((p2 >> 8) & 255) * t);
+  const b = Math.round((p1 & 255) * (1 - t) + (p2 & 255) * t);
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function updateCharacter(id) {
+  const slots = document.querySelectorAll(`.character-slot[data-id="${id}"]`);
+  slots.forEach(slot => {
+    const pct = Math.max(0, Math.min(100, CHARACTERS[id].value));
+
+    const fillRect = slot.querySelector('.fill-rect');
+    if (!fillRect) return;
+    const y = 340 * (1 - pct / 100);
+    fillRect.setAttribute('y', y);
+    fillRect.setAttribute('fill', fadeColor(CHARACTERS[id].color, pct));
+
+    slot.querySelector('.bval').textContent = Math.round(pct);
+
+    const heart = slot.querySelector('.heart-above');
+    heart.classList.toggle('show', pct >= 95);
+
+    const face = slot.querySelector('.face');
+
+    // Build face based on battery level
+    // Head center: cx=100, cy=56, radius~40
+    if (pct >= 60) {
+      // Happy: open eyes, big smile
+      face.innerHTML = `
+        <circle cx="86" cy="54" r="3.5" fill="#1a1a1a"/>
+        <circle cx="114" cy="54" r="3.5" fill="#1a1a1a"/>
+        <path d="M 86 72 Q 100 84 114 72" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+      `;
+    } else if (pct >= 40) {
+      // Neutral: open eyes, flat mouth
+      face.innerHTML = `
+        <circle cx="86" cy="54" r="3.5" fill="#1a1a1a"/>
+        <circle cx="114" cy="54" r="3.5" fill="#1a1a1a"/>
+        <path d="M 88 74 L 112 74" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+      `;
+    } else if (pct >= 20) {
+      // Sad: worry brows, frown, one tear — starts at 40%
+      face.innerHTML = `
+        <!-- worry brows -->
+        <path d="M 78 46 Q 86 42 94 46" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M 106 46 Q 114 42 122 46" fill="none" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/>
+        <!-- eyes -->
+        <circle cx="86" cy="54" r="3.5" fill="#1a1a1a"/>
+        <circle cx="114" cy="54" r="3.5" fill="#1a1a1a"/>
+        <!-- frown -->
+        <path d="M 86 80 Q 100 70 114 80" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+        <!-- single big tear on left cheek -->
+        <path d="M 82 60 Q 76 74 82 80 Q 88 74 82 60 Z" fill="#5ab4ff" stroke="#2e7fcc" stroke-width="1"/>
+      `;
+    } else {
+      // CRYING HARD: scrunched closed eyes (><), worry brows, wide wailing mouth, gushing tears
+      face.innerHTML = `
+        <!-- Scrunched closed eyes ">< " shape - bigger -->
+        <path d="M 76 48 L 92 56 L 76 64" fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 124 48 L 108 56 L 124 64" fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Strong worry brows above -->
+        <path d="M 72 38 L 94 46" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 128 38 L 106 46" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+        <!-- Wide open wailing mouth (large oval) -->
+        <ellipse cx="100" cy="80" rx="10" ry="8" fill="#2a2a2a" stroke="#1a1a1a" stroke-width="2"/>
+        <!-- Tongue hint inside mouth -->
+        <path d="M 93 82 Q 100 88 107 82" fill="#ff6b8a" opacity="0.8"/>
+        <!-- Gushing tears - left side (two streams) -->
+        <path d="M 80 62 Q 73 80 78 90 Q 84 80 80 62 Z" fill="#5ab4ff" stroke="#2e7fcc" stroke-width="1"/>
+        <path d="M 72 66 Q 66 80 70 88 Q 76 80 72 66 Z" fill="#5ab4ff" stroke="#2e7fcc" stroke-width="1" opacity="0.85"/>
+        <!-- Gushing tears - right side (two streams) -->
+        <path d="M 120 62 Q 127 80 122 90 Q 116 80 120 62 Z" fill="#5ab4ff" stroke="#2e7fcc" stroke-width="1"/>
+        <path d="M 128 66 Q 134 80 130 88 Q 124 80 128 66 Z" fill="#5ab4ff" stroke="#2e7fcc" stroke-width="1" opacity="0.85"/>
+        <!-- Tear drops falling (animated) -->
+        <circle cx="76" cy="94" r="2.5" fill="#5ab4ff">
+          <animate attributeName="cy" values="90;115" dur="1.2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;0" dur="1.2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="124" cy="94" r="2.5" fill="#5ab4ff">
+          <animate attributeName="cy" values="90;115" dur="1.2s" begin="0.4s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;0" dur="1.2s" begin="0.4s" repeatCount="indefinite"/>
+        </circle>
+      `;
+    }
+  });
+}
+
+function updateAllCharacters() {
+  Object.keys(CHARACTERS).forEach(updateCharacter);
+}
+
+function handleHumanTap(e) {
+  // ignore if clicked button
+  if (e.target.closest('.adjust-btn') || e.target.closest('.solo-pick-btn')) return;
+
+  const wrap = e.currentTarget;
+  const charId = wrap.dataset.char;
+  const svg = wrap.querySelector('svg');
+  const svgRect = svg.getBoundingClientRect();
+  const y = e.clientY - svgRect.top;
+  const pct = Math.max(0, Math.min(100, (1 - y / svgRect.height) * 100));
+  CHARACTERS[charId].value = Math.round(pct);
+  updateCharacter(charId);
+
+  const wrapRect = wrap.getBoundingClientRect();
+  const ripple = document.createElement('div');
+  ripple.className = 'touch-ripple';
+  ripple.style.left = (e.clientX - wrapRect.left) + 'px';
+  ripple.style.top = (e.clientY - wrapRect.top) + 'px';
+  wrap.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+}
+
+function switchMode(mode) {
+  if (currentMode === mode) return;
+  currentMode = mode;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.mode === mode);
+  });
+  document.querySelectorAll('#modeToggle .toggle-opt').forEach(t => {
+    t.classList.toggle('active', t.dataset.mode === mode);
+  });
+  renderMode();
+}
+
+function updateDbUI() {
+  document.getElementById('dbValue').textContent = Math.round(currentDb);
+  const pct = Math.min(100, Math.max(0, ((currentDb - 30) / 70) * 100));
+  document.getElementById('dbBarFill').style.width = pct + '%';
+}
+
+function syncCfgUI() {
+  Object.keys(CFG).forEach(k => {
+    const el = document.getElementById('val-' + k);
+    if (el) el.textContent = CFG[k];
+  });
+}
+
+// Settings
+document.querySelectorAll('.num-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.key;
+    const delta = parseInt(btn.dataset.delta);
+    const [min, max] = LIMITS[key];
+    CFG[key] = Math.max(min, Math.min(max, CFG[key] + delta));
+    syncCfgUI();
+  });
+});
+
+document.querySelectorAll('#modeToggle .toggle-opt').forEach(btn => {
+  btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => switchMode(tab.dataset.mode));
+});
+
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  document.getElementById('settingsPanel').classList.add('show');
+});
+
+document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+  document.getElementById('settingsPanel').classList.remove('show');
+});
+
+document.getElementById('settingsPanel').addEventListener('click', (e) => {
+  if (e.target.id === 'settingsPanel') {
+    document.getElementById('settingsPanel').classList.remove('show');
+  }
+});
+
+document.getElementById('resetBatteryBtn').addEventListener('click', () => {
+  Object.keys(CHARACTERS).forEach(id => { CHARACTERS[id].value = 100; });
+  updateAllCharacters();
+  showToast('電量已重置為 100%');
+});
+
+// Mic
+document.getElementById('micBtn').addEventListener('click', () => {
+  if (micActive) stopMic();
+  else document.getElementById('permModal').classList.add('show');
+});
+
+document.getElementById('btnAllow').addEventListener('click', async () => {
+  document.getElementById('permModal').classList.remove('show');
+  await startMic();
+});
+
+document.getElementById('btnDeny').addEventListener('click', () => {
+  document.getElementById('permModal').classList.remove('show');
+});
+
+async function startMic() {
+  // Check if mediaDevices is available at all
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast('瀏覽器不支援麥克風，試試用 Chrome / Safari', 4500);
+    return;
+  }
+
+  // Check protocol — mic requires https or localhost
+  const protocol = location.protocol;
+  const host = location.hostname;
+  const isSecureContext = protocol === 'https:' || host === 'localhost' || host === '127.0.0.1';
+  if (!isSecureContext) {
+    showToast('需要在 https 或 localhost 環境才能用麥克風', 5000);
+    // Still try — some browsers allow file:// in dev
+  }
+
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Safari requires resume after user gesture
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+    const src = audioCtx.createMediaStreamSource(micStream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    src.connect(analyser);
+
+    micActive = true;
+    document.getElementById('micBtn').classList.add('active');
+    document.getElementById('micBtnLabel').textContent = '🔴 關閉麥克風';
+    document.getElementById('micDot').classList.add('active');
+    document.getElementById('micStatus').textContent = '偵測中';
+    loudStart = null;
+    quietStart = null;
+
+    loop();
+    showToast('開始偵測環境音量');
+  } catch (err) {
+    let msg = '無法啟動麥克風';
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      msg = '麥克風權限被拒絕，請到瀏覽器設定開啟';
+    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+      msg = '找不到麥克風裝置';
+    } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+      msg = '麥克風被其他程式佔用';
+    } else if (err.name === 'SecurityError') {
+      msg = '需要 https 或 localhost 才能用麥克風';
+    } else if (err.message) {
+      msg = '錯誤：' + err.message;
+    }
+    showToast(msg, 5000);
+    console.error('Mic error:', err);
+  }
+}
+
+function stopMic() {
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+  if (audioCtx) audioCtx.close();
+  micActive = false;
+  document.getElementById('micBtn').classList.remove('active');
+  document.getElementById('micBtnLabel').textContent = '🎤 開啟麥克風';
+  document.getElementById('micDot').classList.remove('active');
+  document.getElementById('micStatus').textContent = '待機';
+  currentDb = 30;
+  updateDbUI();
+  if (rafId) cancelAnimationFrame(rafId);
+}
+
+function measureDb() {
+  if (!analyser) return 30;
+  const buf = new Float32Array(analyser.fftSize);
+  analyser.getFloatTimeDomainData(buf);
+  let sum = 0;
+  for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+  const rms = Math.sqrt(sum / buf.length);
+  const db = rms > 0 ? 20 * Math.log10(rms) + 90 : 30;
+  return Math.max(30, Math.min(100, db));
+}
+
+function getActiveCharIds() {
+  if (currentMode === 'family') return ['dad', 'mom', 'kid'];
+  return [soloCharacterId];
+}
+
+function loop() {
+  if (!micActive) return;
+  currentDb = currentDb * 0.7 + measureDb() * 0.3;
+  updateDbUI();
+
+  const now = Date.now();
+
+  if (currentDb >= CFG.loudDb) {
+    if (loudStart === null) {
+      loudStart = now;
+      lastDecayTime = now;
+    }
+    const elapsed = (now - loudStart) / 1000;
+    if (elapsed >= CFG.loudSec && (now - lastDecayTime) >= CFG.loudSec * 1000) {
+      getActiveCharIds().forEach(id => {
+        CHARACTERS[id].value = Math.max(0, CHARACTERS[id].value - CFG.decayPct);
+      });
+      lastDecayTime = now;
+      updateAllCharacters();
+    }
+  } else {
+    loudStart = null;
+  }
+
+  if (currentDb < CFG.quietDb) {
+    if (quietStart === null) {
+      quietStart = now;
+      lastRecoverTime = now;
+    }
+    const elapsed = (now - quietStart) / 1000;
+    if (elapsed >= CFG.quietSec && (now - lastRecoverTime) >= CFG.quietSec * 1000) {
+      getActiveCharIds().forEach(id => {
+        CHARACTERS[id].value = Math.min(100, CHARACTERS[id].value + CFG.recoverPct);
+      });
+      lastRecoverTime = now;
+      updateAllCharacters();
+    }
+  } else {
+    quietStart = null;
+  }
+
+  rafId = requestAnimationFrame(loop);
+}
+
+syncCfgUI();
+renderMode();
+updateDbUI();
+</script>
+</body>
+</html>
