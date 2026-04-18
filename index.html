@@ -1075,6 +1075,8 @@
     let lastDecayTime = 0;
     let lastRecoverTime = 0;
     let rafId = null;
+    const HUMAN_VIEWBOX_HEIGHT = 340;
+    const HUMAN_HEAD_TOP_Y = 13;
 
     /* === 新版角色 SVG:圓潤上半身 + 兩條分開腿 === */
     /* viewBox 依舊 200 x 340 保留原本 fill-rect 的動畫邏輯 */
@@ -1180,6 +1182,27 @@
       });
 
       updateAllCharacters();
+      positionHearts();
+    }
+
+    function positionHearts() {
+      document.querySelectorAll('.human-wrap').forEach(wrap => {
+        const svg = wrap.querySelector('.human-svg');
+        const heart = wrap.querySelector('.heart-above');
+        if (!svg || !heart) return;
+
+        const wrapRect = wrap.getBoundingClientRect();
+        const svgRect = svg.getBoundingClientRect();
+        if (wrapRect.height <= 0 || svgRect.height <= 0) return;
+
+        const svgTopInWrap = svgRect.top - wrapRect.top;
+        const headTopInWrap = svgTopInWrap + (HUMAN_HEAD_TOP_Y / HUMAN_VIEWBOX_HEIGHT) * svgRect.height;
+        const heartSize = parseFloat(getComputedStyle(heart).fontSize) || 32;
+        const gap = Math.max(6, svgRect.height * 0.02);
+        const top = Math.max(0, headTopInWrap - heartSize - gap);
+
+        heart.style.top = `${top}px`;
+      });
     }
 
     function showToast(text, duration = 1800) {
@@ -1319,6 +1342,9 @@
       });
       renderMode();
     }
+
+    window.addEventListener('resize', positionHearts);
+    window.addEventListener('orientationchange', positionHearts);
 
     function updateDbUI() {
       document.getElementById('dbValue').textContent = Math.round(currentDb);
@@ -1540,6 +1566,7 @@
     syncCfgUI();
     renderMode();
     updateDbUI();
+    positionHearts();
   </script>
 </body>
 
