@@ -878,6 +878,19 @@
         padding: 10px 12px 12px;
       }
 
+      .db-display {
+        padding: 10px 12px;
+      }
+
+      .db-bar {
+        height: 12px;
+        border-radius: 7px;
+      }
+
+      .db-bar-fill {
+        transition: width 0.06s linear, filter 0.08s linear;
+      }
+
       .icon-btn {
         width: 38px;
         height: 38px;
@@ -1072,6 +1085,7 @@
     let audioCtx = null;
     let analyser = null;
     let currentDb = 30;
+    let visualDb = 30;
     let loudStart = null;
     let quietStart = null;
     let lastDecayTime = 0;
@@ -1357,9 +1371,22 @@
     window.addEventListener('load', positionHearts);
 
     function updateDbUI() {
-      document.getElementById('dbValue').textContent = Math.round(currentDb);
-      const pct = Math.min(100, Math.max(0, ((currentDb - 30) / 70) * 100));
-      document.getElementById('dbBarFill').style.width = pct + '%';
+      const isMobile = window.matchMedia('(max-width: 600px)').matches;
+      const dbForBar = isMobile ? visualDb : currentDb;
+      const rawNorm = Math.min(1, Math.max(0, (dbForBar - 30) / 70));
+      const boostedNorm = isMobile ? Math.pow(Math.min(1, rawNorm * 1.55), 0.9) : rawNorm;
+      const pct = boostedNorm * 100;
+
+      document.getElementById('dbValue').textContent = Math.round(dbForBar);
+
+      const barFill = document.getElementById('dbBarFill');
+      barFill.style.width = pct + '%';
+      if (isMobile) {
+        const glowPx = 1.5 + pct * 0.07;
+        barFill.style.filter = `saturate(1.2) drop-shadow(0 0 ${glowPx}px rgba(239, 68, 68, 0.35))`;
+      } else {
+        barFill.style.filter = 'none';
+      }
 
       // 新版狀態文字:安靜/普通/吵鬧
       const statusEl = document.getElementById('dbStatusText');
@@ -1509,6 +1536,7 @@
       document.getElementById('micStatus').textContent = '待機';
       document.getElementById('topMicBtn').classList.remove('active');
       currentDb = 30;
+      visualDb = 30;
       updateDbUI();
       if (rafId) cancelAnimationFrame(rafId);
     }
@@ -1531,7 +1559,9 @@
 
     function loop() {
       if (!micActive) return;
-      currentDb = currentDb * 0.7 + measureDb() * 0.3;
+      const measuredDb = measureDb();
+      currentDb = currentDb * 0.7 + measuredDb * 0.3;
+      visualDb = visualDb * 0.35 + measuredDb * 0.65;
       updateDbUI();
 
       const now = Date.now();
