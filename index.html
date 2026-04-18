@@ -231,14 +231,11 @@
       display: block;
     }
 
-    .characters-wrap:not(.mode-solo) .character-slot[data-id="kid"] .human-wrap {
-      transform: scale(0.82);
-      transform-origin: center bottom;
-    }
-
     .characters-wrap:not(.mode-solo) .character-slot[data-id="kid"] .human-svg {
       height: 100%;
       width: auto;
+      transform: scale(0.82);
+      transform-origin: center bottom;
     }
 
     /* 滿電才出現的浮動愛心 — 歡樂放大版（只在 pct>=95 時加 .show） */
@@ -1080,7 +1077,6 @@
     let lastDecayTime = 0;
     let lastRecoverTime = 0;
     let rafId = null;
-    const HUMAN_VIEWBOX_HEIGHT = 340;
     const HUMAN_HEAD_TOP_Y = 13;
 
     /* === 新版角色 SVG:圓潤上半身 + 兩條分開腿 === */
@@ -1198,14 +1194,22 @@
 
         const wrapRect = wrap.getBoundingClientRect();
         const svgRect = svg.getBoundingClientRect();
-        if (wrapRect.height <= 0 || svgRect.height <= 0) return;
+        if (wrapRect.height <= 0 || svgRect.height <= 0 || !svg.getScreenCTM) return;
 
-        const svgTopInWrap = svgRect.top - wrapRect.top;
-        const headTopInWrap = svgTopInWrap + (HUMAN_HEAD_TOP_Y / HUMAN_VIEWBOX_HEIGHT) * svgRect.height;
+        const point = svg.createSVGPoint();
+        point.x = 100;
+        point.y = HUMAN_HEAD_TOP_Y;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return;
+        const headPoint = point.matrixTransform(ctm);
+
+        const headXInWrap = headPoint.x - wrapRect.left;
+        const headYInWrap = headPoint.y - wrapRect.top;
         const heartSize = parseFloat(getComputedStyle(heart).fontSize) || 32;
-        const gap = Math.max(6, svgRect.height * 0.02);
-        const top = Math.max(0, headTopInWrap - heartSize - gap);
+        const gap = Math.max(6, svgRect.height * 0.015);
+        const top = Math.max(0, headYInWrap - heartSize - gap);
 
+        heart.style.left = `${headXInWrap}px`;
         heart.style.top = `${top}px`;
       });
     }
@@ -1350,6 +1354,7 @@
 
     window.addEventListener('resize', positionHearts);
     window.addEventListener('orientationchange', positionHearts);
+    window.addEventListener('load', positionHearts);
 
     function updateDbUI() {
       document.getElementById('dbValue').textContent = Math.round(currentDb);
